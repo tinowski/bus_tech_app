@@ -1,8 +1,8 @@
 class AuthService {
   // Mock user data
   final Map<String, String> _users = {
-    'employee1': 'password1',
-    'employee2': 'password2',
+    'bob': 'password1',
+    'anna': 'password2',
   };
 
   bool login(String username, String password) {
