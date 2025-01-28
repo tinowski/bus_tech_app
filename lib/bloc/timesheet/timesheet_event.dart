@@ -9,7 +9,6 @@ abstract class TimesheetEvent extends Equatable {
 
 class TimesheetDateSelected extends TimesheetEvent {
   final DateTime selectedDate;
-
   const TimesheetDateSelected(this.selectedDate);
 
   @override
@@ -18,7 +17,6 @@ class TimesheetDateSelected extends TimesheetEvent {
 
 class TimesheetClockInRequested extends TimesheetEvent {
   final DateTime date;
-
   const TimesheetClockInRequested(this.date);
 
   @override
@@ -27,7 +25,6 @@ class TimesheetClockInRequested extends TimesheetEvent {
 
 class TimesheetClockOutRequested extends TimesheetEvent {
   final DateTime date;
-
   const TimesheetClockOutRequested(this.date);
 
   @override

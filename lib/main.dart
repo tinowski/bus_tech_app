@@ -1,3 +1,4 @@
+import 'package:bus_tech_app/bloc/timesheet/timesheet_database.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'bloc/auth/auth_bloc.dart';
@@ -9,11 +10,16 @@ import 'services/timesheet_service.dart';
 import 'screens/login_screen.dart';
 import 'screens/timesheet_screen.dart';
 import 'screens/settings_screen.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 // For localization delegates:
 import 'package:flutter_localizations/flutter_localizations.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Optionally init the DB so it's ready
+  await TimesheetDatabase.instance.database;
   runApp(const MyApp());
 }
 
@@ -41,9 +47,26 @@ class MyApp extends StatelessWidget {
         builder: (context, settingsState) {
           return MaterialApp(
             title: 'Timesheets App',
+
+            /// Here's the modern color scheme + font
             theme: ThemeData(
               useMaterial3: true,
-              colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
+              colorScheme: ColorScheme.fromSeed(
+                seedColor: Colors.indigo, // pick any seed color you like
+              ),
+              textTheme: GoogleFonts.poppinsTextTheme(
+                Theme.of(context).textTheme,
+              ),
+              pageTransitionsTheme: const PageTransitionsTheme(
+                builders: {
+                  // Apply a friendly transition for each platform
+                  TargetPlatform.android: ZoomPageTransitionsBuilder(),
+                  TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
+                  TargetPlatform.macOS: CupertinoPageTransitionsBuilder(),
+                  TargetPlatform.linux: ZoomPageTransitionsBuilder(),
+                  TargetPlatform.windows: ZoomPageTransitionsBuilder(),
+                },
+              ),
             ),
             locale: settingsState.locale, // <-- Critical
             supportedLocales: const [

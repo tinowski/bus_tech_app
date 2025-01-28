@@ -41,14 +41,20 @@ class _LoginScreenState extends State<LoginScreen> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    // App logo or title
-                    Text(
-                      'Welcome',
-                      style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
+                    Image.asset(
+                      'assets/images/logo.png',
+                      width: 120, // adjust size as desired
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 24), // Add spacing here
+                    // App logo or title
+                    // Text(
+                    //   'Bus Tecnología',
+                    //   style:
+                    //       Theme.of(context).textTheme.headlineMedium?.copyWith(
+                    //             fontWeight: FontWeight.bold,
+                    //           ),
+                    // ),
+                    // const SizedBox(height: 24),
                     // Card with login fields
                     Card(
                       elevation: 2,

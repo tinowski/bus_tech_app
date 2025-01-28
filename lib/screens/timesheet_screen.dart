@@ -1,11 +1,10 @@
+// ignore_for_file: unused_element
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:intl/intl.dart';
 
-import '../bloc/auth/auth_bloc.dart';
-import '../bloc/auth/auth_event.dart';
-import '../bloc/auth/auth_state.dart';
 import '../bloc/timesheet/timesheet_bloc.dart';
 import '../bloc/timesheet/timesheet_event.dart';
 import '../bloc/timesheet/timesheet_state.dart';
@@ -18,18 +17,16 @@ class TimesheetScreen extends StatefulWidget {
 }
 
 class _TimesheetScreenState extends State<TimesheetScreen> {
-  // Use a DateFormat to show only hour:minute (24-hour, e.g. "13:45")
+  // For displaying hour:minute only
   final DateFormat _timeFormat = DateFormat('HH:mm');
 
   @override
   void initState() {
     super.initState();
-    // Select today's date by default
-    final now = DateTime.now();
-    context.read<TimesheetBloc>().add(TimesheetDateSelected(now));
+    // Optionally select today's date by default:
+    context.read<TimesheetBloc>().add(TimesheetDateSelected(DateTime.now()));
   }
 
-  /// Convert any [DateTime] to a date-only form (year, month, day).
   DateTime _dateOnly(DateTime date) {
     return DateTime(date.year, date.month, date.day);
   }
@@ -54,33 +51,22 @@ class _TimesheetScreenState extends State<TimesheetScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<AuthBloc, AuthState>(
-      builder: (context, authState) {
-        // If user is not authenticated, redirect to login
-        if (authState is! AuthAuthenticated) {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            Navigator.pushReplacementNamed(context, '/login');
-          });
-        }
-
-        return Scaffold(
-          appBar: AppBar(
-            title: const Text('Timesheet'),
-          ),
-          drawer: _buildDrawer(context),
-          body: BlocBuilder<TimesheetBloc, TimesheetState>(
-            builder: (context, timesheetState) {
-              return Column(
-                children: [
-                  _buildCalendar(timesheetState),
-                  const SizedBox(height: 16),
-                  _buildDayDetails(timesheetState),
-                ],
-              );
-            },
-          ),
-        );
-      },
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Timesheet'),
+      ),
+      drawer: _buildDrawer(context),
+      body: BlocBuilder<TimesheetBloc, TimesheetState>(
+        builder: (context, state) {
+          return Column(
+            children: [
+              _buildCalendar(state),
+              const SizedBox(height: 16),
+              _buildDayDetails(state),
+            ],
+          );
+        },
+      ),
     );
   }
 
@@ -89,35 +75,53 @@ class _TimesheetScreenState extends State<TimesheetScreen> {
       child: SafeArea(
         child: ListView(
           children: [
+            // Header
             const ListTile(
               title: Text(
                 'Menu',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
             const Divider(),
+
+            // Timesheets Option
             ListTile(
               leading: const Icon(Icons.calendar_month_outlined),
               title: const Text('Timesheets'),
               onTap: () {
-                Navigator.pop(context); // just close the drawer
+                // Close the drawer
+                Navigator.pop(context);
+                // If you want to navigate to the same screen,
+                // you can do so, but typically you'd just pop
+                // to close the drawer if you're already on Timesheets.
               },
             ),
+
+            // Settings Option
             ListTile(
               leading: const Icon(Icons.settings),
               title: const Text('Settings'),
               onTap: () {
-                Navigator.pop(context); // close the drawer
+                // Close the drawer
+                Navigator.pop(context);
+                // Navigate to the Settings screen
                 Navigator.pushNamed(context, '/settings');
               },
             ),
+
+            // Logout Option
             ListTile(
               leading: const Icon(Icons.logout),
               title: const Text('Logout'),
               onTap: () {
-                // Dispatch logout event
-                context.read<AuthBloc>().add(AuthLogoutRequested());
-                // Navigate to login
+                // Close the drawer
+                Navigator.pop(context);
+                // For example, if you have an AuthBloc:
+                // context.read<AuthBloc>().add(AuthLogoutRequested());
+                // Then navigate to login screen
                 Navigator.pushReplacementNamed(context, '/login');
               },
             ),
@@ -140,7 +144,7 @@ class _TimesheetScreenState extends State<TimesheetScreen> {
       },
       calendarFormat: CalendarFormat.month,
       onDaySelected: (selectedDay, focusedDay) {
-        // Only allow selection if day is not in the future
+        // **Dispatch** TimesheetDateSelected with the actual day tapped
         if (!_isFutureDay(selectedDay)) {
           context.read<TimesheetBloc>().add(TimesheetDateSelected(selectedDay));
         }
@@ -151,16 +155,8 @@ class _TimesheetScreenState extends State<TimesheetScreen> {
         formatButtonVisible: false,
         titleCentered: true,
       ),
-      calendarStyle: CalendarStyle(
+      calendarStyle: const CalendarStyle(
         isTodayHighlighted: true,
-        selectedDecoration: BoxDecoration(
-          color: Colors.blueAccent,
-          shape: BoxShape.circle,
-        ),
-        todayDecoration: BoxDecoration(
-          color: Colors.blueGrey,
-          shape: BoxShape.circle,
-        ),
       ),
     );
   }
@@ -174,12 +170,10 @@ class _TimesheetScreenState extends State<TimesheetScreen> {
     final clockInTime = state.clockInTime;
     final clockOutTime = state.clockOutTime;
 
-    // Past day (excluding today):
     if (_isPastDay(selectedDay) && !_isToday(selectedDay)) {
-      return _buildReadOnlyTimes(clockInTime, clockOutTime, selectedDay);
-    }
-    // Future day:
-    else if (_isFutureDay(selectedDay)) {
+      return Text(state.message ?? 'Time done for this day');
+    } else if (_isFutureDay(selectedDay)) {
+      // Future day
       return const Padding(
         padding: EdgeInsets.all(16.0),
         child: Text(
@@ -187,16 +181,14 @@ class _TimesheetScreenState extends State<TimesheetScreen> {
           style: TextStyle(color: Colors.grey),
         ),
       );
-    }
-    // Today:
-    else if (_isToday(selectedDay)) {
+    } else if (_isToday(selectedDay)) {
+      // Today
       return _buildTodayTimes(clockInTime, clockOutTime, selectedDay);
     }
-    // Fallback:
+    // Fallback
     return const SizedBox.shrink();
   }
 
-  /// Shows read-only clock in/out times for a past day.
   Widget _buildReadOnlyTimes(
       DateTime? clockInTime, DateTime? clockOutTime, DateTime day) {
     return Card(
@@ -212,21 +204,14 @@ class _TimesheetScreenState extends State<TimesheetScreen> {
               style: Theme.of(context).textTheme.titleMedium,
             ),
             const SizedBox(height: 8),
-            Text(
-              'Clock In: ${clockInTime != null ? _timeFormat.format(clockInTime) : '---'}',
-              style: const TextStyle(fontWeight: FontWeight.w500),
-            ),
-            Text(
-              'Clock Out: ${clockOutTime != null ? _timeFormat.format(clockOutTime) : '---'}',
-              style: const TextStyle(fontWeight: FontWeight.w500),
-            ),
+            Text('Clock In: ${_formatTime(clockInTime)}'),
+            Text('Clock Out: ${_formatTime(clockOutTime)}'),
           ],
         ),
       ),
     );
   }
 
-  /// Shows interactive clock in/out for the current day.
   Widget _buildTodayTimes(
       DateTime? clockInTime, DateTime? clockOutTime, DateTime day) {
     return Card(
@@ -245,20 +230,16 @@ class _TimesheetScreenState extends State<TimesheetScreen> {
             if (clockInTime == null)
               ElevatedButton(
                 onPressed: () {
+                  // **Use the exact selectedDay** from the state
                   context
                       .read<TimesheetBloc>()
                       .add(TimesheetClockInRequested(day));
                 },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.lightBlueAccent,
-                ),
                 child: const Text('Clock In'),
               )
             else
-              Text(
-                'Clock In: ${_timeFormat.format(clockInTime)}',
-                style: const TextStyle(fontWeight: FontWeight.w600),
-              ),
+              Text('Clock In: ${_formatTime(clockInTime)}',
+                  style: const TextStyle(fontWeight: FontWeight.w600)),
             const SizedBox(height: 12),
             if (clockInTime != null && clockOutTime == null)
               ElevatedButton(
@@ -268,18 +249,21 @@ class _TimesheetScreenState extends State<TimesheetScreen> {
                       .add(TimesheetClockOutRequested(day));
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.amber,
+                  backgroundColor: Colors.orange,
                 ),
                 child: const Text('Clock Out'),
               )
             else if (clockOutTime != null)
-              Text(
-                'Clock Out: ${_timeFormat.format(clockOutTime)}',
-                style: const TextStyle(fontWeight: FontWeight.w600),
-              ),
+              Text('Clock Out: ${_formatTime(clockOutTime)}',
+                  style: const TextStyle(fontWeight: FontWeight.w600)),
           ],
         ),
       ),
     );
+  }
+
+  String _formatTime(DateTime? dt) {
+    if (dt == null) return '---';
+    return _timeFormat.format(dt);
   }
 }
